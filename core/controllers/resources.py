@@ -22,7 +22,7 @@ from core.domain import acl_decorators
 from core.domain import fs_domain
 from core.domain import obj_services
 from core.domain import value_generators_domain
-
+from PIL import Image
 
 class ObjectEditorTemplateHandler(base.BaseHandler):
     """Retrieves a template for an object editor."""
