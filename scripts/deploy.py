@@ -66,7 +66,7 @@ _PARSER = argparse.ArgumentParser()
 _PARSER.add_argument(
     '--app_name', help='name of the app to deploy to', type=str)
 
-APP_NAME_OPPIASERVER = 'oppiaserver'
+APP_NAME_OPPIASERVER = 'radhaswami-209020'
 APP_NAME_OPPIATESTSERVER = 'oppiatestserver'
 
 PARSED_ARGS = _PARSER.parse_args()
@@ -90,13 +90,12 @@ RELEASE_DIR_NAME = 'deploy-%s-%s-%s' % (
 RELEASE_DIR_PATH = os.path.join(os.getcwd(), '..', RELEASE_DIR_NAME)
 
 APPCFG_PATH = os.path.join(
-    '..', 'oppia_tools', 'google_appengine_1.9.67', 'google_appengine',
-    'appcfg.py')
+    '../oppia_tools/google_appengine_1.9.67/google_appengine/appcfg.py')
 
 LOG_FILE_PATH = os.path.join('..', 'deploy.log')
 THIRD_PARTY_DIR = os.path.join('.', 'third_party')
 DEPLOY_DATA_PATH = os.path.join(
-    os.getcwd(), os.pardir, 'release-scripts', 'deploy_data', APP_NAME)
+    os.getcwd(), os.pardir, 'deploy_data', APP_NAME)
 
 FILES_AT_ROOT_IN_COMMON = ['favicon.ico', 'robots.txt']
 IMAGE_DIRS = ['avatar', 'general', 'sidebar', 'logo']
@@ -129,8 +128,8 @@ def preprocess_release():
 
     # Copies files in common folder to assets/common.
     for filename in FILES_AT_ROOT_IN_COMMON:
-        src = os.path.join(DEPLOY_DATA_PATH, 'common', filename)
-        dst = os.path.join(os.getcwd(), 'assets', 'common', filename)
+        src = os.path.join(DEPLOY_DATA_PATH, filename)
+        dst = os.path.join(os.getcwd(), 'assets', filename)
         if not os.path.exists(src):
             raise Exception(
                 'Could not find source path %s. Please check your deploy_data '
@@ -190,7 +189,7 @@ def _get_current_release_version():
 def _execute_deployment():
     # Do prerequisite checks.
     common.require_cwd_to_be_oppia()
-    common.ensure_release_scripts_folder_exists_and_is_up_to_date()
+    #common.ensure_release_scripts_folder_exists_and_is_up_to_date()
 
     current_git_revision = subprocess.check_output(
         ['git', 'rev-parse', 'HEAD']).strip()

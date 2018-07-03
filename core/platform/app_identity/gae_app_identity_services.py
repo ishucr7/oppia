@@ -46,4 +46,4 @@ def get_gcs_resource_bucket_name():
     if feconf.DEV_MODE:
         return None
     else:
-        return get_application_id() + _GCS_RESOURCE_BUCKET_NAME_SUFFIX
+        return 'radhaswami-209020.appspot.com'
