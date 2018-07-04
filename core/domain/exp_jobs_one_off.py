@@ -38,6 +38,8 @@ import utils
 
 _COMMIT_TYPE_REVERT = 'revert'
 FILE_COPIED = 'File Copied'
+FILE_ALREADY_EXISTS = 'File already exists in GCS'
+FOUND_DELETED_FILE = 'Error: found deleted file'
 ALLOWED_IMAGE_EXTENSIONS = list(itertools.chain.from_iterable(
     feconf.ACCEPTED_IMAGE_FORMATS_AND_EXTENSIONS.values()))
 
@@ -647,19 +649,12 @@ class ImageDataMigrationJob(jobs.BaseMapReduceOneOffJobManager):
                     content = file_model.content
                     fs = fs_domain.AbstractFileSystem(
                         fs_domain.GcsFileSystem(exploration_id))
-                    if fs.isfile('image/'+filename):
-                        yield('Already Exists', file_model.id)    
+                    if fs.isfile('%s/%s' % ('image', filename)):
+                        yield(FILE_ALREADY_EXISTS, file_model.id)
                     else:
                         fs.commit(
-                            'ADMIN', '%s/%s' % ('image', filename), content,'%s/%s' % ('image', filetype) )
+                            'ADMIN', '%s/%s' % ('image', filename), content,
+                            '%s/%s' % ('image', filetype))
                         yield(FILE_COPIED, 1)
                 else:
-                    yield('Error: found deleted file', file_model.id)
-
-
-    @staticmethod
-    def reduce(status, values):
-        if status == FILE_COPIED:
-            yield(status, len(values))
-        else:
-            yield(status, values)
+                    yield(FOUND_DELETED_FILE, file_model.id)
