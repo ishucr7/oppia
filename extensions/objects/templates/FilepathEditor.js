@@ -658,6 +658,7 @@ oppia.directive('filepathEditor', [
               $scope.setSavedImageFilename(data.filepath, true);
               $scope.$apply();
             };
+            console.log("entered the done part of the http request");
             img.src = getTrustedResourceUrlForImageFileName(data.filepath);
           }).fail(function(data) {
             // Remove the XSSI prefix.
