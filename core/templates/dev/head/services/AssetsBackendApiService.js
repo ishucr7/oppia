@@ -173,7 +173,7 @@ oppia.factory('AssetsBackendApiService', [
         (assetType === ASSET_TYPE_AUDIO ? AUDIO_DOWNLOAD_URL_TEMPLATE :
         IMAGE_DOWNLOAD_URL_TEMPLATE), {
           exploration_id: explorationId,
-          filename: filename
+          filename: filename,
         });
     };
 

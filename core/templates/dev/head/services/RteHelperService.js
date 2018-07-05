@@ -102,6 +102,7 @@ oppia.factory('RteHelperService', [
             componentPreviewUrlTemplate, false, null, true)(
             customizationArgsDict));
         }
+        console.log("interpolatedUrl is "+ interpolatedUrl);
         delete customizationArgsDict.bucketName;
 
         if (!interpolatedUrl) {
