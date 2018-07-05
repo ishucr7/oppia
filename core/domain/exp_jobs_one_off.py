@@ -40,6 +40,7 @@ _COMMIT_TYPE_REVERT = 'revert'
 FILE_COPIED = 'File Copied'
 FILE_ALREADY_EXISTS = 'File already exists in GCS'
 FOUND_DELETED_FILE = 'Error: found deleted file'
+WRONG_INSTANCE_ID = 'Error: The instance_id is not correct'
 ALLOWED_IMAGE_EXTENSIONS = list(itertools.chain.from_iterable(
     feconf.ACCEPTED_IMAGE_FORMATS_AND_EXTENSIONS.values()))
 
@@ -638,7 +639,7 @@ class ImageDataMigrationJob(jobs.BaseMapReduceOneOffJobManager):
                 ALLOWED_IMAGE_EXTENSIONS) + '))$')
             catched_groups = pattern.match(instance_id)
             if not catched_groups:
-                yield('Error: The instance_id is not correct', instance_id)
+                yield(WRONG_INSTANCE_ID, instance_id)
             else:
                 filename = catched_groups.group(2)
                 filepath = 'assets/' + filename
@@ -658,3 +659,10 @@ class ImageDataMigrationJob(jobs.BaseMapReduceOneOffJobManager):
                         yield(FILE_COPIED, 1)
                 else:
                     yield(FOUND_DELETED_FILE, file_model.id)
+
+    @staticmethod
+    def reduce(status, values):
+        if status == FILE_COPIED:
+            yield(status, len(values))
+        else:
+            yield(status, values)
