@@ -247,6 +247,7 @@ oppia.factory('AssetsBackendApiService', [
         };
       },
       getImageUrlForPreview: function(explorationId, filename) {
+        console.log("in AssetsBackendApiService GLOBALS.GCS_RESOURCE_BUCKET_NAME"+GLOBALS.GCS_RESOURCE_BUCKET_NAME+"   IMAGE_DOWNLOAD_URL" + IMAGE_DOWNLOAD_URL_TEMPLATE);
         return _getDownloadUrl(explorationId, filename, ASSET_TYPE_IMAGE);
       }
     };

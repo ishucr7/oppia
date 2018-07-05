@@ -34,8 +34,8 @@ oppia.factory('RteHelperService', [
         id: RTE_COMPONENT_SPECS[componentId].frontend_id,
         iconDataUrl: RTE_COMPONENT_SPECS[componentId].icon_data_url,
         previewUrlTemplate: (GLOBALS.DEV_MODE ?
-          RTE_COMPONENT_SPECS[componentId].preview_url_template_prod :
-          RTE_COMPONENT_SPECS[componentId].preview_url_template_dev),
+          RTE_COMPONENT_SPECS[componentId].preview_url_template_dev :
+          RTE_COMPONENT_SPECS[componentId].preview_url_template_prod),
         isComplex: RTE_COMPONENT_SPECS[componentId].is_complex,
         isBlockElement: RTE_COMPONENT_SPECS[componentId].is_block_element,
         requiresFs: RTE_COMPONENT_SPECS[componentId].requires_fs,
@@ -92,6 +92,7 @@ oppia.factory('RteHelperService', [
           });
         }
         var componentPreviewUrlTemplate = componentDefn.previewUrlTemplate;
+        console.log("Globals.DEV is  " + GLOBALS.DEV_MODE+"  the component preview url is "+componentDefn.previewUrlTemplate);
         if (componentDefn.previewUrlTemplate.indexOf(
           '/rich_text_components') === 0) {
           var interpolatedUrl = UrlInterpolationService.getExtensionResourceUrl(
