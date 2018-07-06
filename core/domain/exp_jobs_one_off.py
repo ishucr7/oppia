@@ -378,6 +378,15 @@ class ExplorationStateIdMappingJob(jobs.BaseMapReduceOneOffJobManager):
             yield ('ERROR get_exp_from_model: exp_id %s' % item.id, str(e))
             return
 
+        # Commit commands which are required to generate state id mapping for
+        # given version of exploration from previous version of exploration.
+        RELEVANT_COMMIT_CMDS = [
+            exp_domain.CMD_ADD_STATE,
+            exp_domain.CMD_RENAME_STATE,
+            exp_domain.CMD_DELETE_STATE,
+            exp_models.ExplorationModel.CMD_REVERT_COMMIT
+        ]
+
         explorations = []
 
         # Fetch all versions of the exploration, if they exist.
@@ -417,8 +426,11 @@ class ExplorationStateIdMappingJob(jobs.BaseMapReduceOneOffJobManager):
                         exploration.id, exploration.version))
                 return
 
-            change_list = [exp_domain.ExplorationChange(
-                change_cmd) for change_cmd in snapshot['commit_cmds']]
+            change_list = [
+                exp_domain.ExplorationChange(change_cmd)
+                for change_cmd in snapshot['commit_cmds']
+                if change_cmd['cmd'] in RELEVANT_COMMIT_CMDS
+            ]
 
             try:
                 # Check if commit is to revert the exploration.
@@ -537,7 +549,7 @@ class ExplorationMigrationValidationJobForTextAngular(
         html_list = exploration.get_all_html_content_strings()
 
         err_dict = html_cleaner.validate_rte_format(
-            html_list, feconf.RTE_FORMAT_TEXTANGULAR, True)
+            html_list, feconf.RTE_FORMAT_TEXTANGULAR, run_migration=True)
 
         for key in err_dict:
             if err_dict[key]:
@@ -599,13 +611,21 @@ class ExplorationMigrationValidationJobForCKEditor(
     def map(item):
         if item.deleted:
             return
+        err_dict = {}
 
-        exploration = exp_services.get_exploration_from_model(item)
+        try:
+            exploration = exp_services.get_exploration_from_model(item)
+        except Exception as e:
+            yield('Error %s in exploration' % str(e), [item.id])
+            return
 
         html_list = exploration.get_all_html_content_strings()
-
-        err_dict = html_cleaner.validate_rte_format(
-            html_list, feconf.RTE_FORMAT_CKEDITOR, True)
+        try:
+            err_dict = html_cleaner.validate_rte_format(
+                html_list, feconf.RTE_FORMAT_CKEDITOR, run_migration=True)
+        except Exception as e:
+            yield('Error %s in exploration %s' % (str(e), item.id), html_list)
+            return
 
         for key in err_dict:
             if err_dict[key]:
@@ -629,36 +649,40 @@ class ImageDataMigrationJob(jobs.BaseMapReduceOneOffJobManager):
 
     @staticmethod
     def map(file_snapshot_content_model):
-        instance_id = (
-            file_snapshot_content_model.get_unversioned_instance_id())
-        filetype = instance_id[instance_id.rfind('.') + 1:]
-        # To separate the image entries from the audio entries we get from the
-        # FileSnapshotContentModel.
-        if filetype in ALLOWED_IMAGE_EXTENSIONS:
-            pattern = re.compile(r'^/([^/]+)/assets/(([^/]+)\.(' + '|'.join(
-                ALLOWED_IMAGE_EXTENSIONS) + '))$')
-            catched_groups = pattern.match(instance_id)
-            if not catched_groups:
-                yield(WRONG_INSTANCE_ID, instance_id)
-            else:
-                filename = catched_groups.group(2)
-                filepath = 'assets/' + filename
-                exploration_id = catched_groups.group(1)
-                file_model = file_models.FileModel.get_model(
-                    exploration_id, filepath, False)
-                if file_model:
-                    content = file_model.content
-                    fs = fs_domain.AbstractFileSystem(
-                        fs_domain.GcsFileSystem(exploration_id))
-                    if fs.isfile('%s/%s' % ('image', filename)):
-                        yield(FILE_ALREADY_EXISTS, file_model.id)
-                    else:
-                        fs.commit(
-                            'ADMIN', '%s/%s' % ('image', filename), content,
-                            '%s/%s' % ('image', filetype))
-                        yield(FILE_COPIED, 1)
+        # This job is allowed to run only in Production environment since it
+        # uses GcsFileSystem which can't be used in Development environment.
+        if not feconf.DEV_MODE:
+            instance_id = (
+                file_snapshot_content_model.get_unversioned_instance_id())
+            filetype = instance_id[instance_id.rfind('.') + 1:]
+            # To separate the image entries from the audio entries we get from
+            # the FileSnapshotContentModel.
+            if filetype in ALLOWED_IMAGE_EXTENSIONS:
+                pattern = re.compile(
+                    r'^/([^/]+)/assets/(([^/]+)\.(' + '|'.join(
+                        ALLOWED_IMAGE_EXTENSIONS) + '))$')
+                catched_groups = pattern.match(instance_id)
+                if not catched_groups:
+                    yield(WRONG_INSTANCE_ID, instance_id)
                 else:
-                    yield(FOUND_DELETED_FILE, file_model.id)
+                    filename = catched_groups.group(2)
+                    filepath = 'assets/' + filename
+                    exploration_id = catched_groups.group(1)
+                    file_model = file_models.FileModel.get_model(
+                        exploration_id, filepath, False)
+                    if file_model:
+                        content = file_model.content
+                        fs = fs_domain.AbstractFileSystem(
+                            fs_domain.GcsFileSystem(exploration_id))
+                        if fs.isfile('image/%s' % (filename)):
+                            yield(FILE_ALREADY_EXISTS, file_model.id)
+                        else:
+                            fs.commit(
+                                'ADMIN', 'image/%s' % (filename),
+                                content, 'image/%s' % (filetype))
+                            yield(FILE_COPIED, 1)
+                    else:
+                        yield(FOUND_DELETED_FILE, file_model.id)
 
     @staticmethod
     def reduce(status, values):
