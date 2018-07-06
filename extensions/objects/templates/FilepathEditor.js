@@ -312,7 +312,6 @@ oppia.directive('filepathEditor', [
 
         var getTrustedResourceUrlForImageFileName = function(imageFileName) {
           var encodedFilepath = window.encodeURIComponent(imageFileName);
-<<<<<<< HEAD
           console.log("in FilpathEditor.js in getTrustedResourceUrlForImage , imageFileName "+imageFileName);
           console.log("in FilpathEditor.js in getTrustedResourceUrlForImage , encodedfilepath "+encodedFilepath);
           console.log("in FilpathEditor.js in getTrustedResourceUrlForImage , jo url aya "+AssetsBackendApiService.getImageUrlForPreview(
@@ -321,11 +320,6 @@ oppia.directive('filepathEditor', [
             $scope.explorationId, encodedFilepath)));
             return $sce.trustAsResourceUrl(AssetsBackendApiService.getImageUrlForPreview(
             $scope.explorationId, encodedFilepath));
-=======
-          return $sce.trustAsResourceUrl(
-            AssetsBackendApiService.getImageUrlForPreview($scope.explorationId,
-              encodedFilepath));
->>>>>>> pr_upload_to_GCS
         };
 
         /** Scope variables and functions (visibles to the view) */
