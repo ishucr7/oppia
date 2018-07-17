@@ -101,20 +101,32 @@ BAD_PATTERNS = {
 
 BAD_PATTERNS_JS_REGEXP = [
     {
-        'regexp': r"\b(ddescribe|fdescribe)\(",
+        'regexp': r'\b(browser.explore)\(',
+        'message': "In tests, please do not use browser.explore().",
+        'excluded_files': (),
+        'excluded_dirs': ()
+    },
+    {
+        'regexp': r'\b(browser.pause)\(',
+        'message': "In tests, please do not use browser.pause().",
+        'excluded_files': (),
+        'excluded_dirs': ()
+    },
+    {
+        'regexp': r'\b(ddescribe|fdescribe)\(',
         'message': "In tests, please use 'describe' instead of 'ddescribe'"
                    "or 'fdescribe'",
         'excluded_files': (),
         'excluded_dirs': ()
     },
     {
-        'regexp': r"\b(iit|fit)\(",
+        'regexp': r'\b(iit|fit)\(',
         'message': "In tests, please use 'it' instead of 'iit' or 'fit'",
         'excluded_files': (),
         'excluded_dirs': ()
     },
     {
-        'regexp': r"templateUrl: \'",
+        'regexp': r'templateUrl: \'',
         'message': "The directives must be directly referenced.",
         'excluded_files': (
             'core/templates/dev/head/pages/exploration_player/'
@@ -128,7 +140,7 @@ BAD_PATTERNS_JS_REGEXP = [
             'extensions/visualizations/')
     },
     {
-        'regexp': r"\$parent",
+        'regexp': r'\$parent',
         'message': "Please do not access parent properties " +
                    "using $parent. Use the scope object" +
                    "for this purpose.",
@@ -140,7 +152,7 @@ BAD_PATTERNS_JS_REGEXP = [
 
 BAD_LINE_PATTERNS_HTML_REGEXP = [
     {
-        'regexp': r"text\/ng-template",
+        'regexp': r'text\/ng-template',
         'message': "The directives must be directly referenced.",
         'excluded_files': (
             'core/templates/dev/head/pages/exploration_player/'
@@ -155,7 +167,7 @@ BAD_LINE_PATTERNS_HTML_REGEXP = [
             'extensions/value_generators/')
     },
     {
-        'regexp': r"[ \t]+$",
+        'regexp': r'[ \t]+$',
         'message': "There should not be any trailing whitespaces.",
         'excluded_files': (),
         'excluded_dirs': ()
@@ -164,7 +176,7 @@ BAD_LINE_PATTERNS_HTML_REGEXP = [
 
 BAD_PATTERNS_PYTHON_REGEXP = [
     {
-        'regexp': r"print \'",
+        'regexp': r'print \'',
         'message': "Please do not use print statement.",
         'excluded_files': (
             'core/tests/test_utils.py',
@@ -192,6 +204,17 @@ EXCLUDED_PATHS = (
     '*.png', '*.zip', '*.ico', '*.jpg', '*.min.js',
     'assets/scripts/*', 'core/tests/data/*', '*.mp3')
 
+GENERATED_FILE_PATHS = (
+    'extensions/interactions/LogicProof/static/js/generatedDefaultData.js',
+    'extensions/interactions/LogicProof/static/js/generatedParser.js',
+    'core/templates/dev/head/expressions/ExpressionParserService.js')
+
+CONFIG_FILE_PATHS = (
+    'core/tests/protractor.conf.js',
+    'core/tests/karma.conf.js',
+    'core/templates/dev/head/mathjaxConfig.js',
+    'assets/constants.js',
+    'assets/rich_text_components_definitions.js')
 
 if not os.getcwd().endswith('oppia'):
     print ''
@@ -1018,7 +1041,6 @@ def _check_html_directive_name(all_files):
     print '----------------------------------------'
     total_files_checked = 0
     total_error_count = 0
-    summary_messages = []
     files_to_check = [
         filename for filename in all_files if not
         any(fnmatch.fnmatch(filename, pattern) for pattern in EXCLUDED_PATHS)
@@ -1027,8 +1049,8 @@ def _check_html_directive_name(all_files):
     summary_messages = []
     # For RegExp explanation, please see https://regex101.com/r/gU7oT6/37.
     pattern_to_match = (
-        r"templateUrl: UrlInterpolationService\.[A-z\(]+" +
-        r"(?P<directive_name>[^\)]+)")
+        r'templateUrl: UrlInterpolationService\.[A-z\(]+' +
+        r'(?P<directive_name>[^\)]+)')
     for filename in files_to_check:
         with open(filename) as f:
             content = f.read()
@@ -1072,7 +1094,6 @@ def _check_directive_scope(all_files):
     """
     print 'Starting directive scope check'
     print '----------------------------------------'
-    summary_messages = []
     # Select JS files which need to be checked.
     files_to_check = [
         filename for filename in all_files if not
@@ -1185,6 +1206,63 @@ def _check_directive_scope(all_files):
     else:
         summary_message = '%s  Directive scope check passed' % (
             _MESSAGE_TYPE_SUCCESS)
+        print summary_message
+        summary_messages.append(summary_message)
+
+    print ''
+    print '----------------------------------------'
+    print ''
+
+    return summary_messages
+
+
+def _match_line_breaks_in_controller_dependencies(all_files):
+    """This function checks whether the line breaks between the dependencies
+    listed in the controller of a directive or service exactly match those
+    between the arguments of the controller function.
+    """
+    print 'Starting controller dependency line break check'
+    print '----------------------------------------'
+    files_to_check = [
+        filename for filename in all_files if not
+        any(fnmatch.fnmatch(filename, pattern) for pattern in EXCLUDED_PATHS)
+        and filename.endswith('.js')]
+    failed = False
+    summary_messages = []
+
+    # For RegExp explanation, please see https://regex101.com/r/T85GWZ/2/.
+    pattern_to_match = (
+        r'controller: \[(?P<stringfied_dependencies>[\S\s]*?)' +
+        r'function\((?P<function_parameters>[\S\s]*?)\)')
+    for filename in files_to_check:
+        with open(filename) as f:
+            content = f.read()
+        matched_patterns = re.findall(pattern_to_match, content)
+        for matched_pattern in matched_patterns:
+            stringfied_dependencies, function_parameters = matched_pattern
+            stringfied_dependencies = (
+                stringfied_dependencies.strip().replace(
+                    "'", '').replace(' ', ''))[:-1]
+            function_parameters = function_parameters.strip().replace(' ', '')
+            if stringfied_dependencies != function_parameters:
+                failed = True
+                print (
+                    '%s --> Please ensure that line breaks between '
+                    'the stringfied dependencies: "%s" and the function '
+                    'parameters: "%s" for the corresponding controller '
+                    'in this file exactly match.' % (
+                        filename, stringfied_dependencies, function_parameters))
+
+    if failed:
+        summary_message = (
+            '%s   Controller dependency line break check failed' % (
+                _MESSAGE_TYPE_FAILED))
+        print summary_message
+        summary_messages.append(summary_message)
+    else:
+        summary_message = (
+            '%s  Controller dependency line break check passed' % (
+                _MESSAGE_TYPE_SUCCESS))
         print summary_message
         summary_messages.append(summary_message)
 
@@ -1357,9 +1435,69 @@ def _check_html_indent(all_files, debug=False):
     return summary_messages
 
 
+def _check_for_copyright_notice(all_files):
+    """This function checks whether the copyright notice
+    is present at the beginning of files.
+    """
+    print 'Starting copyright notice check'
+    print '----------------------------------------'
+    js_files_to_check = [
+        filename for filename in all_files if filename.endswith('.js') and (
+            not filename.endswith(GENERATED_FILE_PATHS)) and (
+                not filename.endswith(CONFIG_FILE_PATHS))]
+    py_files_to_check = [
+        filename for filename in all_files if filename.endswith('.py') and (
+            not filename.endswith('__init__.py'))]
+    sh_files_to_check = [
+        filename for filename in all_files if filename.endswith('.sh')]
+    all_files_to_check = (
+        js_files_to_check + py_files_to_check + sh_files_to_check)
+    regexp_to_check = (
+        r'Copyright \d{4} The Oppia Authors\. All Rights Reserved\.')
+
+    failed = False
+    summary_messages = []
+
+    for filename in all_files_to_check:
+        has_copyright_notice = False
+        with open(filename, 'r') as f:
+            for line_num, line in enumerate(f):
+                if line_num < 5:
+                    if re.search(regexp_to_check, line):
+                        has_copyright_notice = True
+                        break
+                else:
+                    break
+
+        if not has_copyright_notice:
+            failed = True
+            print (
+                '%s --> Please add a proper copyright notice to this file.' % (
+                    filename))
+
+    if failed:
+        summary_message = '%s   Copyright notice check failed' % (
+            _MESSAGE_TYPE_FAILED)
+        print summary_message
+        summary_messages.append(summary_message)
+    else:
+        summary_message = '%s  Copyright notice check passed' % (
+            _MESSAGE_TYPE_SUCCESS)
+        print summary_message
+        summary_messages.append(summary_message)
+
+    print ''
+    print '----------------------------------------'
+    print ''
+
+    return summary_messages
+
+
 def main():
     all_files = _get_all_files()
     directive_scope_messages = _check_directive_scope(all_files)
+    controller_dependency_messages = (
+        _match_line_breaks_in_controller_dependencies(all_files))
     html_directive_name_messages = _check_html_directive_name(all_files)
     import_order_messages = _check_import_order(all_files)
     newline_messages = _check_newline_character(all_files)
@@ -1371,12 +1509,14 @@ def main():
     html_linter_messages = _lint_html_files(all_files)
     linter_messages = _pre_commit_linter(all_files)
     pattern_messages = _check_bad_patterns(all_files)
+    copyright_notice_messages = _check_for_copyright_notice(all_files)
     all_messages = (
-        directive_scope_messages + html_directive_name_messages +
-        import_order_messages + newline_messages +
-        docstring_messages + comment_messages +
+        directive_scope_messages + controller_dependency_messages +
+        html_directive_name_messages + import_order_messages +
+        newline_messages + docstring_messages + comment_messages +
         html_indent_messages + html_linter_messages +
-        linter_messages + pattern_messages)
+        linter_messages + pattern_messages +
+        copyright_notice_messages)
     if any([message.startswith(_MESSAGE_TYPE_FAILED) for message in
             all_messages]):
         sys.exit(1)

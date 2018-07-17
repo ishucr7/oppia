@@ -36,7 +36,6 @@ oppia.factory('AssetsBackendApiService', [
         ('https://storage.googleapis.com/' + GLOBALS.GCS_RESOURCE_BUCKET_NAME +
        '/<exploration_id>/assets/audio/<filename>') :
         '/audiohandler/<exploration_id>/audio/<filename>');
-
     var IMAGE_DOWNLOAD_URL_TEMPLATE = (
       (GLOBALS.GCS_RESOURCE_BUCKET_NAME &&
         constants.ENABLE_GCS_STORAGE_FOR_IMAGES) ?

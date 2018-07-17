@@ -624,7 +624,9 @@ class ExplorationMigrationValidationJobForCKEditor(
             err_dict = html_cleaner.validate_rte_format(
                 html_list, feconf.RTE_FORMAT_CKEDITOR, run_migration=True)
         except Exception as e:
-            yield('Error %s in exploration %s' % (str(e), item.id), html_list)
+            yield(
+                'Error in exploration %s' % item.id,
+                [traceback.format_exc()])
             return
 
         for key in err_dict:
@@ -684,6 +686,10 @@ class ImageDataMigrationJob(jobs.BaseMapReduceOneOffJobManager):
                     else:
                         yield(FOUND_DELETED_FILE, file_model.id)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> add_dimensions
     @staticmethod
     def reduce(status, values):
         if status == FILE_COPIED:
