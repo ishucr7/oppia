@@ -686,10 +686,7 @@ class ImageDataMigrationJob(jobs.BaseMapReduceOneOffJobManager):
                     else:
                         yield(FOUND_DELETED_FILE, file_model.id)
 
-<<<<<<< HEAD
-=======
 
->>>>>>> add_dimensions
     @staticmethod
     def reduce(status, values):
         if status == FILE_COPIED:

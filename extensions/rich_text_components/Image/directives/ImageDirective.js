@@ -35,6 +35,8 @@ oppia.directive('oppiaNoninteractiveImage', [
       controller: ['$scope', '$attrs', function($scope, $attrs) {
         $scope.filepath = HtmlEscaperService.escapedJsonToObj(
           $attrs.filepathWithValue);
+        console.log($scope.filepath);
+        console.log($attrs.filepathWithValue);
         $scope.imageUrl = '';
         $scope.loadingIndicatorUrl = UrlInterpolationService.getStaticImageUrl(
           LOADING_INDICATOR_URL);
@@ -94,6 +96,13 @@ oppia.directive('oppiaNoninteractiveImage', [
         if ($attrs.altWithValue) {
           $scope.imageAltText = HtmlEscaperService.escapedJsonToObj(
             $attrs.altWithValue);
+        }
+        if($attrs.dimensionsWithValue) {
+          console.log(" Yes image with dimensions exists and its value is ");
+          console.log(HtmlEscaperService.escapedJsonToObj($attrs.dimensionsWithValue));
+        }
+        else {
+          console.log("No it doesn't exist");
         }
       }]
     };

@@ -129,6 +129,12 @@ oppia.factory('ExtractImageFilenamesFromStateService', [
         // filenames in the exploration.
         var filename = JSON.parse(
           imageTagList[i].getAttribute('filepath-with-value'));
+          if(filename.width) {
+            console.log("width is "+filename.width);
+            console.log("height is "+filename.height);
+            console.log("filename is "+filename.filename);
+          }
+          console.log("filename in extractFilepathValueFromOppa is "+filename);
         filenames.push(filename);
       }
       return filenames;

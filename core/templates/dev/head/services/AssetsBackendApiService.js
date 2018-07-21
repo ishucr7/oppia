@@ -169,6 +169,7 @@ oppia.factory('AssetsBackendApiService', [
     };
 
     var _getDownloadUrl = function(explorationId, filename, assetType) {
+      console.log("iinside getDownload Url and filename is "+filename);
       return UrlInterpolationService.interpolateUrl(
         (assetType === ASSET_TYPE_AUDIO ? AUDIO_DOWNLOAD_URL_TEMPLATE :
         IMAGE_DOWNLOAD_URL_TEMPLATE), {
