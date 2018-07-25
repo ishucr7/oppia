@@ -129,13 +129,18 @@ oppia.factory('ExtractImageFilenamesFromStateService', [
         // filenames in the exploration.
         var filename = JSON.parse(
           imageTagList[i].getAttribute('filepath-with-value'));
-          if(filename.width) {
-            console.log("width is "+filename.width);
-            console.log("height is "+filename.height);
-            console.log("filename is "+filename.filename);
-          }
+        if(filename.width) {
+          console.log("width is "+filename.width);
+          console.log("height is "+filename.height);
+          console.log("filename in extractFIlepat is is "+filename.filename);
+          filenames.push(filename.filename);
+        }
+        else
+        {
+          filenames.push(filename);
           console.log("filename in extractFilepathValueFromOppa is "+filename);
-        filenames.push(filename);
+        }
+        
       }
       return filenames;
     };
@@ -199,7 +204,17 @@ oppia.factory('ExtractImageFilenamesFromStateService', [
       if (state.interaction.id === INTERACTION_TYPE_IMAGE_CLICK_INPUT) {
         var filename = (
           state.interaction.customizationArgs.imageAndRegions.value.imagePath);
-        filenamesInState.push(filename);
+        if(filename.width) {
+          console.log("IR width is "+filename.width);
+          console.log("IR height is "+filename.height);
+          console.log("IR filename in extractFIlepat is is "+filename.filename);
+          filenamesInState.push(filename.filename);
+        }
+        else
+        {
+          filenamesInState.push(filename);
+          console.log("IR filename in extractFilepathValueFromOppa is "+filename);
+        }
       }
       allHtmlOfState = _getAllHtmlOfState(state);
       allHtmlOfState.forEach(function(htmlStr) {

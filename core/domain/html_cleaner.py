@@ -28,10 +28,10 @@ import bleach
 import bs4
 from core.domain import rte_component_registry
 from core.platform import models
-# from core.platform.app_identity import gae_app_identity_services
 import feconf
 
 app_identity_services = models.Registry.import_app_identity_services()
+
 
 def filter_a(name, value):
     """Returns whether the described attribute of an anchor ('a') tag should be
@@ -258,11 +258,12 @@ OPPIA_BLOCK_COMPONENTS = [
 ]
 
 
-def convert_to_textangular(html_data):
+def convert_to_textangular(html_data, unused_exp_id):
     """This function converts the html to TextAngular supported format.
 
     Args:
         html_data: str. HTML string to be converted.
+        unused_exp_id: str. Unused argument.
 
     Returns:
         str. The converted HTML string.
@@ -670,7 +671,7 @@ def validate_rte_format(html_list, rte_format, run_migration=False):
     for html_data in html_list:
         if run_migration:
             if rte_format == feconf.RTE_FORMAT_TEXTANGULAR:
-                soup_data = convert_to_textangular(html_data)
+                soup_data = convert_to_textangular(html_data, 'unused')
             else:
                 soup_data = convert_to_ckeditor(html_data)
         else:
@@ -769,12 +770,13 @@ def _validate_soup_for_rte(soup, rte_format, err_dict):
     return is_invalid
 
 
-def add_caption_attr_to_image(html_string):
+def add_caption_attr_to_image(html_string, unused_exp_id):
     """Adds caption attribute to all oppia-noninteractive-image tags.
 
     Args:
         html_string. str: HTML string in which the caption attribute is to be
             added.
+        unused_exp_id. str: Unused argument.
 
     Returns:
         str. Updated HTML string with the caption attribute for all
@@ -790,13 +792,13 @@ def add_caption_attr_to_image(html_string):
     return unicode(soup)
 
 
-def add_dimensions_to_image(exp_id, html_string):
+def add_dimensions_to_noninteractive_image_tag(html_string, exp_id):
     """Adds dimensions to all oppia-noninteractive-image tags.
 
     Args:
-        html_string. str: HTML string in which the dimensions is to be
+        html_string: str. HTML string in which the dimensions is to be
             added.
-        exp_id. str: Exploration id.
+        exp_id: str. Exploration id.
 
     Returns:
         str. Updated HTML string with the dimensions for all
@@ -805,18 +807,32 @@ def add_dimensions_to_image(exp_id, html_string):
     soup = bs4.BeautifulSoup(html_string.encode('utf-8'), 'html.parser')
 
     for image in soup.findAll('oppia-noninteractive-image'):
-        attrs = image.attrs
         filename = unescape_html(image['filepath-with-value'])
         filename = filename[1:-1]
-        # filename = image['filepath-with-value']
-        URL = 'https://storage.googleapis.com/' + app_identity_services.get_gcs_resource_bucket_name() + '/' + exp_id + '/assets/image/' + filename
-        print URL
-        imageFile = cStringIO.StringIO(urllib.urlopen(URL).read())
-        img = Image.open(imageFile)
-        width, height = img.size
-        print 'HEIGHT is '
-        print height
-        image['filepath-with-value'] = escape_html(json.dumps(
-                {'filename': filename, 'height': height , 'width': width }))
+        image['filepath-with-value'] = get_filepath_of_object_image(
+            filename, exp_id)
 
     return unicode(soup)
+
+
+def get_filepath_of_object_image(filename, exp_id):
+    """Gets the dimensions of the image file.
+
+    Args:
+        filename: str. Name of the file whose dimensions need to be
+            calculated.
+        exp_id: str. Exploration id.
+
+    Returns:
+        object. filepath object of the image.
+    """
+    URL = ('https://storage.googleapis.com/%s/%s/assets/image/%s' % (
+        app_identity_services.get_gcs_resource_bucket_name(), exp_id,
+        filename)) if not feconf.DEV_MODE else (
+            '/imagehandler/%s/%s' % (exp_id, filename))
+    imageFile = cStringIO.StringIO(urllib.urlopen(URL).read())
+    img = Image.open(imageFile)
+    width, height = img.size
+
+    return escape_html(json.dumps(
+        {'filename': filename, 'height': height, 'width': width}))

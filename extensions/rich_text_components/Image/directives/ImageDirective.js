@@ -37,6 +37,15 @@ oppia.directive('oppiaNoninteractiveImage', [
           $attrs.filepathWithValue);
         console.log($scope.filepath);
         console.log($attrs.filepathWithValue);
+        if(scope.filepath.width) {
+          console.log("widht"+ scope.filepath.width);
+          console.log("height"+ scope.filepath.height);
+          console.log("filename"+ scope.filepath.filename);
+        }
+        else
+        {
+          console.log("thullu");
+        }
         $scope.imageUrl = '';
         $scope.loadingIndicatorUrl = UrlInterpolationService.getStaticImageUrl(
           LOADING_INDICATOR_URL);
