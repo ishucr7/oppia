@@ -4149,10 +4149,10 @@ states:
           feedback:
             content_id: outcome
             html: \'<p>Here is the image1 </p><oppia-noninteractive-image caption-with-value="&amp;quot;&amp;quot;"
-              filepath-with-value="{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:
+              fileinfo-with-value="{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:
               490, &amp;quot;filename&amp;quot;: &amp;quot;startBlue.png&amp;quot;}">
               </oppia-noninteractive-image><p>Here is the image2 </p><oppia-noninteractive-image
-              caption-with-value="&amp;quot;&amp;quot;" filepath-with-value="{&amp;quot;width&amp;quot;:
+              caption-with-value="&amp;quot;&amp;quot;" fileinfo-with-value="{&amp;quot;width&amp;quot;:
               120, &amp;quot;height&amp;quot;: 490, &amp;quot;filename&amp;quot;:
               &amp;quot;startBlue.png&amp;quot;}"> </oppia-noninteractive-image>\'
           labelled_as_correct: false
@@ -4326,7 +4326,7 @@ states:
     content:
       content_id: content
       html: \'<oppia-noninteractive-image caption-with-value="&amp;quot;&amp;quot;"
-        filepath-with-value="{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:
+        fileinfo-with-value="{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:
         490, &amp;quot;filename&amp;quot;: &amp;quot;random.png&amp;quot;}"></oppia-noninteractive-image><p>Hello
         this is test case to check image tag inside p tag</p>\'
     content_ids_to_audio_translations:
@@ -4432,6 +4432,7 @@ title: Title
 
             exploration = exp_domain.Exploration.from_yaml(
                 'eid', self.YAML_CONTENT_V26_TEXTANGULAR)
+            print "COMPARISON BETWEEN EXPLORATION TO YAML AND YAML V30"
             self.assertEqual(
                 exploration.to_yaml(), self.YAML_CONTENT_V30_IMAGE_DIMENSIONS)
 
@@ -4769,7 +4770,7 @@ class StateOperationsUnitTests(test_utils.GenericTestBase):
                         'content_id': 'default_outcome', 'html': (
                             u'<p><oppia-noninteractive-image '
                             'caption-with-value="&amp;quot;&amp;quot;" '
-                            'filepath-with-value="{&amp;quot;width&amp;quot;:'
+                            'fileinfo-with-value="{&amp;quot;width&amp;quot;:'
                             ' 120, &amp;quot;height&amp;quot;: 490, &amp;quot;'
                             'filename&amp;quot;: &amp;quot;random.png&amp;'
                             'quot;}"></oppia-noninteractive-image>Hello this '

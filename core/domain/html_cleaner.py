@@ -819,8 +819,13 @@ def add_dimensions_to_noninteractive_image_tag(html_string, exp_id):
     for image in soup.findAll(name='oppia-noninteractive-image'):
         filename = unescape_html(image['filepath-with-value'])
         filename = filename[1:-1]
-        image['filepath-with-value'] = escape_html(json.dumps(
-            get_filepath_of_object_image(filename, exp_id)))
+        attrs = image.attrs
+        if 'fileinfo-with-value' not in attrs:
+            image['fileinfo-with-value'] = escape_html(json.dumps(
+                get_filepath_of_object_image(filename, exp_id)))
+            del(image['filepath-with-value'])
+    print " the html returned from add_dimensions_to_noninteractive_image_tag "
+    print soup
     return unicode(soup)
 
 

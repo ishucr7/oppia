@@ -794,7 +794,7 @@ class ContentMigrationTests(test_utils.GenericTestBase):
                 ' noninteractive image tags.</p>'
             ),
             'expected_output': (
-                u'<p><oppia-noninteractive-image filepath-with-value='
+                u'<p><oppia-noninteractive-image fileinfo-with-value='
                 '"{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:'
                 ' 490, &amp;quot;filename&amp;quot;: &amp;quot;random.png&amp;'
                 'quot;}"></oppia-noninteractive-image>Hello this is test case'
@@ -809,7 +809,7 @@ class ContentMigrationTests(test_utils.GenericTestBase):
                 ' noninteractive image tags.</p>'
             ),
             'expected_output': (
-                u'<p><oppia-noninteractive-image filepath-with-value='
+                u'<p><oppia-noninteractive-image fileinfo-with-value='
                 '"{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:'
                 ' 490, &amp;quot;filename&amp;quot;: &amp;quot;abc.png&amp;'
                 'quot;}"></oppia-noninteractive-image>Hello this is test case'
