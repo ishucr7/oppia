@@ -172,9 +172,9 @@ if [ ! -d "$TOOLS_DIR/selenium-2.53.2" ]; then
   pip install selenium==2.53.2 --target="$TOOLS_DIR/selenium-2.53.2"
 fi
 
-echo Checking if Pillow is installed in third_party
+echo Checking if pillow is installed in third_party
 if [ ! -d "$THIRD_PARTY_DIR/pillow-5.1.0" ]; then
-  echo Installing Pillow
+  echo Installing pillow
 
   pip install Pillow==5.1.0 --target="$THIRD_PARTY_DIR/pillow-5.1.0"
 fi
