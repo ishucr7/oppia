@@ -23,14 +23,14 @@ oppia.factory('ExplorationStatesService', [
   'ExplorationInitStateNameService', 'AlertsService', 'ChangeListService',
   'EditorStateService', 'ValidatorsService', 'StatesObjectFactory',
   'SolutionValidityService', 'AngularNameService',
-  'AnswerClassificationService', 'ExplorationContextService',
+  'AnswerClassificationService', 'ContextService',
   'UrlInterpolationService',
   function(
       $log, $uibModal, $filter, $location, $rootScope, $injector, $q,
       ExplorationInitStateNameService, AlertsService, ChangeListService,
       EditorStateService, ValidatorsService, StatesObjectFactory,
       SolutionValidityService, AngularNameService,
-      AnswerClassificationService, ExplorationContextService,
+      AnswerClassificationService, ContextService,
       UrlInterpolationService) {
     var _states = null;
 
@@ -167,9 +167,8 @@ oppia.factory('ExplorationStatesService', [
           if (solution) {
             var result = (
               AnswerClassificationService.getMatchingClassificationResult(
-                ExplorationContextService.getExplorationId(),
                 stateName,
-                _states.getState(stateName),
+                _states.getState(stateName).interaction,
                 solution.correctAnswer,
                 $injector.get(
                   AngularNameService.getNameOfInteractionRulesService(
@@ -204,15 +203,6 @@ oppia.factory('ExplorationStatesService', [
         }
         return (
           ValidatorsService.isValidStateName(newStateName, showWarnings));
-      },
-      isSolutionValid: function(stateName) {
-        return SolutionValidityService.isSolutionValid(stateName);
-      },
-      updateSolutionValidity: function(stateName, solutionIsValid) {
-        SolutionValidityService.updateValidity(stateName, solutionIsValid);
-      },
-      deleteSolutionValidity: function(stateName) {
-        SolutionValidityService.deleteSolutionValidity(stateName);
       },
       getStateContentMemento: function(stateName) {
         return getStatePropertyMemento(stateName, 'content');
@@ -389,6 +379,7 @@ oppia.factory('ExplorationStatesService', [
         // will raise an error because the new initial state name does not
         // exist.
         ChangeListService.renameState(newStateName, oldStateName);
+        SolutionValidityService.onRenameState(newStateName, oldStateName);
         // Amend initStateName appropriately, if necessary. Note that this
         // must come after the state renaming, otherwise saving will lead to
         // a complaint that the new name is not a valid state name.

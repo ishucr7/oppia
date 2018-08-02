@@ -25,6 +25,7 @@ from core.domain import exp_jobs_one_off
 from core.domain import exp_services
 from core.domain import feedback_services
 from core.domain import fs_domain
+from core.domain import html_cleaner
 from core.domain import param_domain
 from core.domain import rating_services
 from core.domain import rights_manager
@@ -88,7 +89,7 @@ class ExplorationQueriesUnitTests(ExplorationServicesUnitTests):
         self.assertEqual(
             exp_services.get_exploration_titles_and_categories([]), {})
 
-        self.save_new_default_exploration('A', self.owner_id, 'TitleA')
+        self.save_new_default_exploration('A', self.owner_id, title='TitleA')
         self.assertEqual(
             exp_services.get_exploration_titles_and_categories(['A']), {
                 'A': {
@@ -97,7 +98,7 @@ class ExplorationQueriesUnitTests(ExplorationServicesUnitTests):
                 }
             })
 
-        self.save_new_default_exploration('B', self.owner_id, 'TitleB')
+        self.save_new_default_exploration('B', self.owner_id, title='TitleB')
         self.assertEqual(
             exp_services.get_exploration_titles_and_categories(['A']), {
                 'A': {
@@ -285,7 +286,7 @@ class ExplorationSummaryQueriesUnitTests(ExplorationServicesUnitTests):
             # Page 1: 3 initial explorations.
             (exp_ids, search_cursor) = (
                 exp_services.get_exploration_ids_matching_query(
-                    '', None))
+                    ''))
             self.assertEqual(len(exp_ids), 3)
             self.assertIsNotNone(search_cursor)
             found_exp_ids += exp_ids
@@ -293,7 +294,7 @@ class ExplorationSummaryQueriesUnitTests(ExplorationServicesUnitTests):
             # Page 2: 3 more explorations.
             (exp_ids, search_cursor) = (
                 exp_services.get_exploration_ids_matching_query(
-                    '', search_cursor))
+                    '', cursor=search_cursor))
             self.assertEqual(len(exp_ids), 3)
             self.assertIsNotNone(search_cursor)
             found_exp_ids += exp_ids
@@ -301,7 +302,7 @@ class ExplorationSummaryQueriesUnitTests(ExplorationServicesUnitTests):
             # Page 3: 1 final exploration.
             (exp_ids, search_cursor) = (
                 exp_services.get_exploration_ids_matching_query(
-                    '', search_cursor))
+                    '', cursor=search_cursor))
             self.assertEqual(len(exp_ids), 1)
             self.assertIsNone(search_cursor)
             found_exp_ids += exp_ids
@@ -609,29 +610,36 @@ class LoadingAndDeletionOfExplorationDemosTest(ExplorationServicesUnitTests):
             len(demo_exploration_ids), 1,
             msg='There must be at least one demo exploration.')
 
-        for exp_id in demo_exploration_ids:
-            start_time = datetime.datetime.utcnow()
+        def _mock_get_filepath_of_object_image(filename, unused_exp_id):
+            return {'filename': filename, 'height': 490, 'width': 120}
 
-            exp_services.load_demo(exp_id)
-            exploration = exp_services.get_exploration_by_id(exp_id)
-            warnings = exploration.validate(strict=True)
-            if warnings:
-                raise Exception(warnings)
+        with self.swap(
+            html_cleaner, 'get_filepath_of_object_image',
+            _mock_get_filepath_of_object_image):
 
-            duration = datetime.datetime.utcnow() - start_time
-            processing_time = duration.seconds + duration.microseconds / 1E6
-            self.log_line(
-                'Loaded and validated exploration %s (%.2f seconds)' %
-                (exploration.title.encode('utf-8'), processing_time))
+            for exp_id in demo_exploration_ids:
+                start_time = datetime.datetime.utcnow()
 
-        self.assertEqual(
-            exp_models.ExplorationModel.get_exploration_count(),
-            len(demo_exploration_ids))
+                exp_services.load_demo(exp_id)
+                exploration = exp_services.get_exploration_by_id(exp_id)
+                warnings = exploration.validate(strict=True)
+                if warnings:
+                    raise Exception(warnings)
 
-        for exp_id in demo_exploration_ids:
-            exp_services.delete_demo(exp_id)
-        self.assertEqual(
-            exp_models.ExplorationModel.get_exploration_count(), 0)
+                duration = datetime.datetime.utcnow() - start_time
+                processing_time = duration.seconds + duration.microseconds / 1E6
+                self.log_line(
+                    'Loaded and validated exploration %s (%.2f seconds)' %
+                    (exploration.title.encode('utf-8'), processing_time))
+
+            self.assertEqual(
+                exp_models.ExplorationModel.get_exploration_count(),
+                len(demo_exploration_ids))
+
+            for exp_id in demo_exploration_ids:
+                exp_services.delete_demo(exp_id)
+            self.assertEqual(
+                exp_models.ExplorationModel.get_exploration_count(), 0)
 
 
 class ExplorationYamlImportingTests(test_utils.GenericTestBase):
@@ -1344,13 +1352,15 @@ title: A title
         self.assertEqual(exploration.version, 3)
 
         # Download version 2.
-        zip_file_output = exp_services.export_to_zip_file(self.EXP_ID, 2)
+        zip_file_output = exp_services.export_to_zip_file(
+            self.EXP_ID, version=2)
         zf = zipfile.ZipFile(StringIO.StringIO(zip_file_output))
         self.assertEqual(
             zf.open('A title.yaml').read(), self.SAMPLE_YAML_CONTENT)
 
         # Download version 3.
-        zip_file_output = exp_services.export_to_zip_file(self.EXP_ID, 3)
+        zip_file_output = exp_services.export_to_zip_file(
+            self.EXP_ID, version=3)
         zf = zipfile.ZipFile(StringIO.StringIO(zip_file_output))
         self.assertEqual(
             zf.open('A title.yaml').read(), self.UPDATED_YAML_CONTENT)
@@ -2468,7 +2478,7 @@ class ExplorationSearchTests(ExplorationServicesUnitTests):
             self.save_new_valid_exploration(
                 all_exp_ids[i],
                 self.owner_id,
-                all_exp_titles[i],
+                title=all_exp_titles[i],
                 category=all_exp_categories[i])
 
         # We're only publishing the first 4 explorations, so we're not

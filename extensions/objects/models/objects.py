@@ -359,14 +359,23 @@ class MusicPhrase(BaseObject):
 
 
 class Filepath(BaseObject):
-    """A string representing a filepath.
+    """A dict representing a filepath."""
 
-    The path will be prefixed with '[exploration_id]/assets'.
-    """
+    description = 'A dict that stores the filename, height and width of image'
 
-    description = 'A string that represents a filepath'
-
-    SCHEMA = UnicodeString.SCHEMA
+    SCHEMA = {
+        'type': 'dict',
+        'properties': [{
+            'name': 'filename',
+            'schema': UnicodeString.SCHEMA,
+        }, {
+            'name': 'height',
+            'schema': Int.SCHEMA,
+        }, {
+            'name': 'width',
+            'schema': Int.SCHEMA,
+        }]
+    }
 
 
 class CheckedProof(BaseObject):
@@ -823,7 +832,29 @@ class ListOfSetsOfHtmlStrings(BaseObject):
     SCHEMA = {
         'type': 'list',
         'items': SetOfHtmlString.SCHEMA,
-        'validators': [{
-            'id': 'is_uniquified'
-        }]
     }
+
+
+class DragAndDropHtmlString(BaseObject):
+    """A specific drag and drop Html string class."""
+
+    description = (
+        'A specific drag and drop item from collection of drag and drop items.')
+    default_value = ''
+
+    SCHEMA = {
+        'type': 'html'
+    }
+
+
+class DragAndDropPositiveInt(BaseObject):
+    """A drag and drop positive int class representing the rank(position) of a
+    drag and drop item.
+    """
+
+    description = (
+        'The rank(position) of a drag and drop item in the given list of sets' +
+        'of drag and drop items.')
+    default_value = 1
+
+    SCHEMA = PositiveInt.SCHEMA

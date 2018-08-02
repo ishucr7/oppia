@@ -22,19 +22,23 @@ oppia.directive('outcomeDestinationEditor', [
       restrict: 'E',
       scope: {
         outcomeHasFeedback: '=',
-        outcome: '='
+        outcome: '=',
+        addState: '='
       },
       templateUrl: UrlInterpolationService.getDirectiveTemplateUrl(
         '/components/outcome_destination_editor_directive.html'),
       controller: [
-        '$scope', 'EditorStateService', 'ExplorationStatesService',
+        '$scope', 'EditorStateService',
         'StateGraphLayoutService', 'PLACEHOLDER_OUTCOME_DEST',
         'FocusManagerService', 'EditorFirstTimeEventsService',
+        'EXPLORATION_AND_SKILL_ID_PATTERN',
         function(
-            $scope, EditorStateService, ExplorationStatesService,
+            $scope, EditorStateService,
             StateGraphLayoutService, PLACEHOLDER_OUTCOME_DEST,
-            FocusManagerService, EditorFirstTimeEventsService) {
+            FocusManagerService, EditorFirstTimeEventsService,
+            EXPLORATION_AND_SKILL_ID_PATTERN) {
           var currentStateName = null;
+          $scope.canAddPrerequisiteSkill = constants.ENABLE_NEW_STRUCTURES;
 
           $scope.$on('saveOutcomeDestDetails', function() {
             // Create new state if specified.
@@ -46,7 +50,7 @@ oppia.directive('outcomeDestinationEditor', [
               $scope.outcome.dest = newStateName;
               delete $scope.outcome.newStateName;
 
-              ExplorationStatesService.addState(newStateName, null);
+              $scope.addState(newStateName);
             }
           });
 
@@ -55,7 +59,8 @@ oppia.directive('outcomeDestinationEditor', [
           // development.
           $scope.canEditRefresherExplorationId = (
             GLOBALS.isAdmin || GLOBALS.isModerator);
-          $scope.explorationIdPattern = /^[a-zA-Z0-9_-]+$/;
+          $scope.explorationAndSkillIdPattern =
+            EXPLORATION_AND_SKILL_ID_PATTERN;
 
           $scope.isSelfLoop = function() {
             return $scope.outcome.dest === currentStateName;
@@ -73,7 +78,7 @@ oppia.directive('outcomeDestinationEditor', [
 
           $scope.newStateNamePattern = /^[a-zA-Z0-9.\s-]+$/;
           $scope.destChoices = [];
-          $scope.$watch(ExplorationStatesService.getStates, function() {
+          $scope.$watch(EditorStateService.getStateNames, function() {
             currentStateName = EditorStateService.getActiveStateName();
 
             // This is a list of objects, each with an ID and name. These
@@ -88,7 +93,7 @@ oppia.directive('outcomeDestinationEditor', [
             // graph.
             var lastComputedArrangement = (
               StateGraphLayoutService.getLastComputedArrangement());
-            var allStateNames = ExplorationStatesService.getStateNames();
+            var allStateNames = EditorStateService.getStateNames();
 
             // It is possible that lastComputedArrangement is null if the graph
             // has never been rendered at the time this computation is being

@@ -5,7 +5,7 @@
     <i class="material-icons oppia-navbar-close-icon" ng-if="isSidebarShown()" >&#10005;</i>
   </a>
 
-  <a class="oppia-navbar-brand-name oppia-transition-200" href="/"
+  <a class="oppia-navbar-brand-name oppia-transition-200 protractor-test-oppia-main-logo" href="/"
      focus-on="<[::LABEL_FOR_CLEARING_FOCUS]>">
     <img ng-src="<[getStaticImageUrl('/logo/288x128_logo_white.png')]>" class="oppia-logo"
          ng-class="windowIsNarrow ? 'oppia-logo-small' : 'oppia-logo-wide'" alt="Oppia Home">
@@ -32,13 +32,13 @@
            aria-expanded="false"
            tabindex="0"
            ng-mouseover="openSubmenu($event, 'aboutMenu')"
-           ng-mouseleave="closeSubmenu($event)">
+           ng-mouseleave="closeSubmenuIfNotMobile($event)">
           <span class="oppia-navbar-tab-content" translate="I18N_TOPNAV_ABOUT"></span>
           <span class="caret"></span>
         </a>
         <ul uib-dropdown-menu class="uib-dropdown-menu oppia-navbar-dropdown"
             ng-mouseover="openSubmenu($event, 'aboutMenu')"
-            ng-mouseleave="closeSubmenu($event)"
+            ng-mouseleave="closeSubmenuIfNotMobile($event)"
             role="menu">
           <li><a ng-keydown="onMenuKeypress($event, 'aboutMenu', {shiftTab: ACTION_CLOSE})" class="oppia-navbar-tab-content protractor-test-about-link" href="/about" translate="I18N_TOPNAV_ABOUT_OPPIA"></a></li>
           <li><a class="oppia-navbar-tab-content protractor-test-get-started-link " href="/get_started" translate="I18N_TOPNAV_GET_STARTED"></a></li>
@@ -63,7 +63,7 @@
     <li ng-class="{'open' : activeMenuName === 'profileMenu'}" uib-dropdown ng-if="username" class="protractor-test-profile-dropdown">
       <a uib-dropdown-toggle class="oppia-navbar-dropdown-toggle"
          ng-mouseover="openSubmenu($event, 'profileMenu')"
-         ng-mouseleave="closeSubmenu($event)"
+         ng-mouseleave="closeSubmenuIfNotMobile($event)"
          ng-keydown="onMenuKeypress($event, 'profileMenu', {shiftTab: ACTION_CLOSE, enter: ACTION_OPEN})"
          role="menuitem"
          aria-haspopup="true"
@@ -101,9 +101,9 @@
 
       <ul uib-dropdown-menu class="uib-dropdown-menu ng-cloak oppia-navbar-dropdown" role="menu"
           ng-mouseover="openSubmenu($event, 'profileMenu')"
-          ng-mouseleave="closeSubmenu($event)">
+          ng-mouseleave="closeSubmenuIfNotMobile($event)">
         <li>
-          <a ng-click="closeSubmenu($event)" ng-href="<[profilePageUrl]>"
+          <a ng-click="closeSubmenuIfNotMobile($event)" ng-href="<[profilePageUrl]>"
              class="protractor-test-profile-link"
              ng-keydown="onMenuKeypress($event, 'profileMenu', {shiftTab: ACTION_CLOSE})">
             <strong><[username]></strong>
@@ -111,19 +111,19 @@
         </li>
         <hr class="oppia-top-right-menu-item-separator">
         <li>
-          <a ng-click="closeSubmenu($event)" href="/creator_dashboard"
+          <a ng-click="closeSubmenuIfNotMobile($event)" href="/creator_dashboard"
              class="protractor-test-dashboard-link">
             <span translate="I18N_TOPNAV_CREATOR_DASHBOARD"></span>
           </a>
         </li>
         <li>
-          <a ng-click="closeSubmenu($event)" href="/learner_dashboard"
+          <a ng-click="closeSubmenuIfNotMobile($event)" href="/learner_dashboard"
              class="protractor-test-dashboard-link">
             <span translate="I18N_TOPNAV_LEARNER_DASHBOARD"></span>
           </a>
         </li>
         <li>
-          <a ng-click="closeSubmenu($event)" href="/notifications_dashboard"
+          <a ng-click="closeSubmenuIfNotMobile($event)" href="/notifications_dashboard"
              class="protractor-test-notifications-link">
             <span translate="I18N_TOPNAV_NOTIFICATIONS"></span>
             <span ng-if="numUnseenNotifications > 0">
@@ -132,18 +132,18 @@
           </a>
         </li>
         <li>
-          <a ng-click="closeSubmenu($event)" href="/preferences"
+          <a ng-click="closeSubmenuIfNotMobile($event)" href="/preferences"
              class="protractor-test-preferences-link">
             <span translate="I18N_TOPNAV_PREFERENCES"></span>
           </a>
         </li>
         <li ng-if="isModerator">
-          <a ng-click="closeSubmenu($event)" href="/moderator" target="_blank">
+          <a ng-click="closeSubmenuIfNotMobile($event)" href="/moderator" target="_blank">
             <span translate="I18N_TOPNAV_MODERATOR_PAGE"></span>
           </a>
         </li>
         <li ng-if="isSuperAdmin">
-          <a class="protractor-test-admin-link" ng-click="closeSubmenu($event)" href="/admin" target="_blank">
+          <a class="protractor-test-admin-link" ng-click="closeSubmenuIfNotMobile($event)" href="/admin" target="_blank">
             <span translate="I18N_TOPNAV_ADMIN_PAGE"></span>
           </a>
         </li>
@@ -151,7 +151,7 @@
         <hr class="oppia-top-right-menu-item-separator">
 
         <li>
-          <a ng-click="closeSubmenu($event);onLogoutButtonClicked()" ng-href="<[logoutUrl]>"
+          <a ng-click="closeSubmenuIfNotMobile($event);onLogoutButtonClicked()" ng-href="<[logoutUrl]>"
              ng-keydown="onMenuKeypress($event, 'profileMenu', {tab: ACTION_CLOSE})">
             <span translate="I18N_TOPNAV_LOGOUT"></span>
           </a>
@@ -170,11 +170,12 @@
       <ul uib-dropdown-menu class="uib-dropdown-menu oppia-navbar-dropdown" role="menu"
           style="margin-right: 15px; padding: 0;">
         <li>
-          <a href="" style="padding: 0; width: 200px;" ng-click="onLoginButtonClicked()">
+          <a href="" style="padding: 0; width: 190px;" ng-click="onLoginButtonClicked()">
             <div class="oppia-signin-google">
-              <i class="oppia-signin-google-icon fa fa-google-plus"></i>
-              <div class="oppia-signin-google-separator"></div>
-              <b><span translate="I18N_TOPNAV_SIGN_IN_WITH_GOOGLE"></span></b>
+              <div class="oppia-signin-g-icon">
+                <img ng-src="<[googleSignInIconUrl]>">
+              </div>
+              <span class="oppia-signin-text" translate="I18N_TOPNAV_SIGN_IN_WITH_GOOGLE"></span>
             </div>
           </a>
         </li>
@@ -188,32 +189,32 @@
     outline: auto 5px -webkit-focus-ring-color;
   }
   top-navigation-bar .oppia-signin-google {
-    background: #dd4b39;
-    color: white;
-    font-family: Roboto, sans-serif;
-    font-size: 13px;
-    margin: 3px 3px 3px;
-    padding: 9px;
-  }
-  top-navigation-bar .oppia-signin-google i.oppia-signin-google-icon.fa.fa-google-plus {
-    font-size: 22px;
-    margin-right: 25.5px;
-    padding-right: 3px;
-    vertical-align: middle;
-  }
-  top-navigation-bar .oppia-signin-google-separator {
-    background: rgba(175, 10, 10, 0.72);
-    display: -webkit-inline-box;
-    height: 40px;
-    left: 37px;
-    position: absolute;
-    top: 3px;
-    width: 1px;
-  }
-  top-navigation-bar .oppia-signin-google b {
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    border-width: 0;
+    box-shadow: 1px 1px 0px 1px rgba(0,0,0,0.05);
+    color: #737373;
+    font-family: Roboto, arial, sans-serif;
+    font-size: 14px;
     font-weight: bold;
-    position: absolute;
-    top: 13.7px;
+    height: 40px;
+    padding-left: 8px;
+    padding-right: 8px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  top-navigation-bar .oppia-signin-google:focus,
+  top-navigation-bar .oppia-signin-google:hover {
+    box-shadow: 1px 4px 5px 1px rgba(0,0,0,0.1);
+  }
+  top-navigation-bar .oppia-signin-google:active {
+    background-color: #e5e5e5;
+    box-shadow: none;
+    transition-duration: 10ms;
+  }
+  top-navigation-bar .oppia-signin-g-icon {
+    float: left;
+    padding: 10px 24px 10px 0;
   }
   top-navigation-bar .oppia-navbar-menu-icon {
     color: #fff;
@@ -276,5 +277,12 @@
     color: #fff;
     margin-right: 4px;
     margin-top: -10px;
+  }
+  top-navigation-bar .oppia-signin-text {
+    font-family: Roboto, arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: .21px;
+    line-height: 38px;
   }
 </style>

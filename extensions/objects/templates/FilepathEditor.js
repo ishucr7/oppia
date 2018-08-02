@@ -15,11 +15,11 @@
 // This directive can only be used in the context of an exploration.
 
 oppia.directive('filepathEditor', [
-  '$http', '$sce', 'AlertsService', 'ExplorationContextService',
+  '$http', '$sce', 'AlertsService', 'ContextService',
   'UrlInterpolationService', 'AssetsBackendApiService',
   'OBJECT_EDITOR_URL_PREFIX',
   function(
-      $http, $sce, AlertsService, ExplorationContextService,
+      $http, $sce, AlertsService, ContextService,
       UrlInterpolationService, AssetsBackendApiService,
       OBJECT_EDITOR_URL_PREFIX) {
     return {
@@ -331,7 +331,7 @@ oppia.directive('filepathEditor', [
         // (e.g. if this is part of an editable list).
         $scope.$watch('value', function(newValue) {
           if (newValue) {
-            $scope.setSavedImageFilename(newValue, false);
+            $scope.setSavedImageFilename(newValue.filename, false);
           }
         });
 
@@ -589,6 +589,7 @@ oppia.directive('filepathEditor', [
         };
 
         $scope.setSavedImageFilename = function(filename, updateParent) {
+          var dimensions = $scope.calculateTargetImageDimensions();
           $scope.data = {
             mode: MODE_SAVED,
             metadata: {
@@ -598,7 +599,11 @@ oppia.directive('filepathEditor', [
           };
           if (updateParent) {
             AlertsService.clearWarnings();
-            $scope.value = filename;
+            $scope.value = {
+              filename: filename,
+              height: dimensions.height,
+              width: dimensions.width
+            };
           }
         };
 
@@ -727,7 +732,7 @@ oppia.directive('filepathEditor', [
         $scope.userIsResizingCropArea = false;
         $scope.cropAreaResizeDirection = null;
 
-        $scope.explorationId = ExplorationContextService.getExplorationId();
+        $scope.explorationId = ContextService.getExplorationId();
         $scope.resetFilePathEditor();
 
         window.addEventListener('mouseup', function(e) {

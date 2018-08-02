@@ -50,7 +50,7 @@ class HtmlCleanerUnitTests(test_utils.GenericTestBase):
         for datum in test_data:
             self.assertEqual(
                 html_cleaner.clean(datum[0]), datum[1],
-                '\n\nOriginal text: %s' % datum[0])
+                msg='\n\nOriginal text: %s' % datum[0])
 
     def test_bad_tags_suppressed(self):
         test_data = [(
@@ -79,7 +79,7 @@ class HtmlCleanerUnitTests(test_utils.GenericTestBase):
         for datum in test_data:
             self.assertEqual(
                 html_cleaner.clean(datum[0]), datum[1],
-                '\n\nOriginal text: %s' % datum[0])
+                msg='\n\nOriginal text: %s' % datum[0])
 
     def test_oppia_custom_tags(self):
         test_data = [(
@@ -99,7 +99,7 @@ class HtmlCleanerUnitTests(test_utils.GenericTestBase):
         for datum in test_data:
             self.assertEqual(
                 html_cleaner.clean(datum[0]), datum[1],
-                '\n\nOriginal text: %s' % datum[0])
+                msg='\n\nOriginal text: %s' % datum[0])
 
 
 class HtmlStripperUnitTests(test_utils.GenericTestBase):
@@ -221,11 +221,11 @@ class ContentMigrationTests(test_utils.GenericTestBase):
         for index, test_case in enumerate(test_cases):
             soup = bs4.BeautifulSoup(test_case['html_content'], 'html.parser')
             if index == 0:
-                tag = soup.findAll('i')[1]
+                tag = soup.findAll(name='i')[1]
             elif index == 1:
-                tag = soup.find('br')
+                tag = soup.find(name='br')
             elif index == 2:
-                tag = soup.find('b')
+                tag = soup.find(name='b')
             html_cleaner.wrap_with_siblings(tag, soup.new_tag('p'))
             self.assertEqual(str(soup), test_case['expected_output'])
 
@@ -719,7 +719,7 @@ class ContentMigrationTests(test_utils.GenericTestBase):
                 '&amp;amp;amp;quot;\\&amp;quot; filepath-with-value=\\&amp;quot'
                 ';&amp;amp;amp;quot;loremipsum.png&amp;amp;amp;quot;\\&amp;quot'
                 ';&amp;gt;&amp;lt;/oppia-noninteractive-image&amp;gt;&amp;lt;'
-                'p&amp;gt;&amp;amp;amp;nbsp;&amp;lt;/p&amp;gt;&amp;lt;/li&amp;'
+                'p&amp;gt;\\u00a0&amp;lt;/p&amp;gt;&amp;lt;/li&amp;'
                 'gt;&amp;lt;/ul&amp;gt;&amp;quot;" heading-with-value="&amp;'
                 'quot;loremipusm&amp;quot;"></oppia-noninteractive-collapsible>'
             )
@@ -784,3 +784,49 @@ class ContentMigrationTests(test_utils.GenericTestBase):
                 html_cleaner.add_caption_attr_to_image(
                     test_case['html_content']),
                 test_case['expected_output'])
+
+    def test_add_dimensions_to_noninteractive_image_tag(self):
+        test_cases = [{
+            'html_content': (
+                '<p><oppia-noninteractive-image filepath-with-value="&amp;quot;'
+                'random.png&amp;quot;"></oppia-noninteractive-image>Hello this'
+                ' is test case to check that dimensions are added to the oppia'
+                ' noninteractive image tags.</p>'
+            ),
+            'expected_output': (
+                u'<p><oppia-noninteractive-image filepath-with-value='
+                '"{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:'
+                ' 490, &amp;quot;filename&amp;quot;: &amp;quot;random.png&amp;'
+                'quot;}"></oppia-noninteractive-image>Hello this is test case'
+                ' to check that dimensions are added to the oppia '
+                'noninteractive image tags.</p>'
+            )
+        }, {
+            'html_content': (
+                '<p><oppia-noninteractive-image filepath-with-value="&amp;quot;'
+                'abc.png&amp;quot;"></oppia-noninteractive-image>Hello this'
+                ' is test case to check that dimensions are added to the oppia'
+                ' noninteractive image tags.</p>'
+            ),
+            'expected_output': (
+                u'<p><oppia-noninteractive-image filepath-with-value='
+                '"{&amp;quot;width&amp;quot;: 120, &amp;quot;height&amp;quot;:'
+                ' 490, &amp;quot;filename&amp;quot;: &amp;quot;abc.png&amp;'
+                'quot;}"></oppia-noninteractive-image>Hello this is test case'
+                ' to check that dimensions are added to the oppia '
+                'noninteractive image tags.</p>'
+            )
+        }]
+
+        def _mock_get_filepath_of_object_image(filename, unused_exp_id):
+            return {'filename': filename, 'height': 490, 'width': 120}
+
+        with self.swap(
+            html_cleaner, 'get_filepath_of_object_image',
+            _mock_get_filepath_of_object_image):
+
+            for test_case in test_cases:
+                self.assertEqual(
+                    html_cleaner.add_dimensions_to_noninteractive_image_tag(
+                        test_case['html_content'], 'unused'),
+                    test_case['expected_output'])

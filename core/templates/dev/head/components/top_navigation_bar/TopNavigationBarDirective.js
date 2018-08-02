@@ -28,12 +28,14 @@ oppia.directive('topNavigationBar', [
         'top_navigation_bar_directive.html'),
       controller: [
         '$scope', '$http', '$window', '$timeout', '$translate',
-        'SidebarStatusService', 'LABEL_FOR_CLEARING_FOCUS',
+        'SidebarStatusService', 'LABEL_FOR_CLEARING_FOCUS', 'UserService',
         'siteAnalyticsService', 'WindowDimensionsService', 'DebouncerService',
+        'DeviceInfoService',
         function(
             $scope, $http, $window, $timeout, $translate,
-            SidebarStatusService, LABEL_FOR_CLEARING_FOCUS,
-            siteAnalyticsService, WindowDimensionsService, DebouncerService) {
+            SidebarStatusService, LABEL_FOR_CLEARING_FOCUS, UserService,
+            siteAnalyticsService, WindowDimensionsService, DebouncerService,
+            DeviceInfoService) {
           if (GLOBALS.userIsLoggedIn && GLOBALS.preferredSiteLanguageCode) {
             $translate.use(GLOBALS.preferredSiteLanguageCode);
           }
@@ -46,7 +48,9 @@ oppia.directive('topNavigationBar', [
           $scope.getStaticImageUrl = UrlInterpolationService.getStaticImageUrl;
           $scope.activeMenuName = '';
           $scope.username = GLOBALS.username;
-          $scope.profilePictureDataUrl = GLOBALS.profilePictureDataUrl;
+          UserService.getProfileImageDataUrlAsync().then(function(dataUrl) {
+            $scope.profilePictureDataUrl = dataUrl;
+          });
           $scope.isAdmin = GLOBALS.isAdmin;
           $scope.isModerator = GLOBALS.isModerator;
           $scope.isSuperAdmin = GLOBALS.isSuperAdmin;
@@ -83,6 +87,10 @@ oppia.directive('topNavigationBar', [
               $window.location = GLOBALS.loginUrl;
             }, 150);
           };
+
+          $scope.googleSignInIconUrl = (
+            UrlInterpolationService.getStaticImageUrl(
+              '/google_signin_buttons/google_signin.svg'));
           $scope.onLogoutButtonClicked = function() {
             $window.localStorage.removeItem('last_uploaded_audio_lang');
           };
@@ -109,6 +117,12 @@ oppia.directive('topNavigationBar', [
             $scope.activeMenuName = '';
             angular.element(evt.currentTarget).closest('li')
               .find('a').blur();
+          };
+          $scope.closeSubmenuIfNotMobile = function(evt) {
+            if (DeviceInfoService.isMobileDevice()) {
+              return;
+            }
+            $scope.closeSubmenu(evt);
           };
           /**
            * Handles keydown events on menus.

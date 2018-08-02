@@ -19,10 +19,12 @@
 import json
 import os
 
+from constants import constants
 from core import jobs_registry
 from core.domain import exp_domain
 from core.domain import exp_jobs_one_off
 from core.domain import exp_services
+from core.domain import html_cleaner
 from core.domain import rights_manager
 from core.domain import user_services
 from core.platform import models
@@ -33,6 +35,10 @@ import utils
 (job_models, exp_models,) = models.Registry.import_models([
     models.NAMES.job, models.NAMES.exploration])
 search_services = models.Registry.import_search_services()
+
+
+def _mock_get_filepath_of_object_image(filename, unused_exp_id):
+    return {'filename': filename, 'height': 490, 'width': 120}
 
 
 class ExpSummariesCreationOneOffJobTest(test_utils.GenericTestBase):
@@ -387,7 +393,8 @@ class ExpSummariesContributorsOneOffJobTest(test_utils.GenericTestBase):
         exploration_summary = exp_services.get_exploration_summary_by_id(
             exploration.id)
         self.assertNotIn(
-            feconf.MIGRATION_BOT_USERNAME, exploration_summary.contributor_ids)
+            feconf.MIGRATION_BOT_USERNAME,
+            exploration_summary.contributor_ids)
 
 
 class ExplorationContributorsSummaryOneOffJobTest(test_utils.GenericTestBase):
@@ -533,7 +540,7 @@ class ExplorationContributorsSummaryOneOffJobTest(test_utils.GenericTestBase):
             self.EXP_ID, feconf.SYSTEM_COMMITTER_ID, title='Original Title')
 
         # Create commits with all the system user ids.
-        for system_id in feconf.SYSTEM_USER_IDS:
+        for system_id in constants.SYSTEM_USER_IDS:
             exp_services.update_exploration(
                 system_id, self.EXP_ID, [exp_domain.ExplorationChange({
                     'cmd': 'edit_exploration_property',
@@ -552,7 +559,7 @@ class ExplorationContributorsSummaryOneOffJobTest(test_utils.GenericTestBase):
         exploration_summary = exp_services.get_exploration_summary_by_id(
             exploration.id)
 
-        for system_id in feconf.SYSTEM_USER_IDS:
+        for system_id in constants.SYSTEM_USER_IDS:
             self.assertNotIn(
                 system_id,
                 exploration_summary.contributors_summary)
@@ -619,7 +626,10 @@ class ExplorationMigrationJobTest(test_utils.GenericTestBase):
         self.process_and_flush_pending_tasks()
 
         # Verify the new exploration has been migrated by the job.
-        updated_exp = exp_services.get_exploration_by_id(self.NEW_EXP_ID)
+        with self.swap(
+            html_cleaner, 'get_filepath_of_object_image',
+            _mock_get_filepath_of_object_image):
+            updated_exp = exp_services.get_exploration_by_id(self.NEW_EXP_ID)
         self.assertEqual(
             updated_exp.states_schema_version,
             feconf.CURRENT_EXPLORATION_STATES_SCHEMA_VERSION)
@@ -1044,6 +1054,10 @@ class TextAngularValidationAndMigrationTest(test_utils.GenericTestBase):
         exploration_dict = exploration.to_dict()
         updated_dict = exp_domain.Exploration._convert_v26_dict_to_v27_dict( # pylint: disable=protected-access
             exploration_dict)
+        # This is done to ensure that exploration is not passed through CKEditor
+        # Migration pipeline.
+        updated_dict['schema_version'] = 29
+        updated_dict['states_schema_version'] = 24
         updated_exploration = exp_domain.Exploration.from_dict(updated_dict)
         updated_states = updated_dict['states']
 
@@ -1054,19 +1068,22 @@ class TextAngularValidationAndMigrationTest(test_utils.GenericTestBase):
             self.assertEqual(
                 updated_html, unicode(test_cases[index]['expected_output']))
 
-        exp_services.save_new_exploration(
-            self.albert_id, updated_exploration)
+        with self.swap(
+            html_cleaner, 'get_filepath_of_object_image',
+            _mock_get_filepath_of_object_image):
+            exp_services.save_new_exploration(
+                self.albert_id, updated_exploration)
 
-        # Start validation job on updated exploration.
-        job_id = (
-            exp_jobs_one_off.ExplorationContentValidationJobForTextAngular.create_new()) # pylint: disable=line-too-long
-        exp_jobs_one_off.ExplorationContentValidationJobForTextAngular.enqueue(
-            job_id)
-        self.process_and_flush_pending_tasks()
+            # Start validation job on updated exploration.
+            job_id = (
+                exp_jobs_one_off.ExplorationContentValidationJobForTextAngular.create_new()) # pylint: disable=line-too-long
+            exp_jobs_one_off.ExplorationContentValidationJobForTextAngular.enqueue( # pylint: disable=line-too-long
+                job_id)
+            self.process_and_flush_pending_tasks()
 
-        actual_output = (
-            exp_jobs_one_off.ExplorationContentValidationJobForTextAngular.get_output( # pylint: disable=line-too-long
-                job_id))
+            actual_output = (
+                exp_jobs_one_off.ExplorationContentValidationJobForTextAngular.get_output( # pylint: disable=line-too-long
+                    job_id))
 
         # Test that validation passes after migration.
         self.assertEqual(actual_output, [])

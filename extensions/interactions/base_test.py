@@ -23,6 +23,7 @@ import struct
 
 from core.domain import dependency_registry
 from core.domain import exp_services
+from core.domain import html_cleaner
 from core.domain import interaction_registry
 from core.domain import obj_services
 from core.tests import test_utils
@@ -350,7 +351,7 @@ class InteractionUnitTests(test_utils.GenericTestBase):
 
             # Check that the specified interaction id is the same as the class
             # name.
-            self.assertTrue(interaction_id, interaction.__class__.__name__)
+            self.assertTrue(interaction_id, msg=interaction.__class__.__name__)
 
             # Check that the configuration file contains the correct
             # top-level keys, and that these keys have the correct types.
@@ -454,9 +455,9 @@ class InteractionUnitTests(test_utils.GenericTestBase):
                 interaction_id)
             if interaction.is_trainable:
                 self.assertNotEqual(
-                    len(interaction.rules_dict), 1,
-                    'Expected trainable interaction to have more than just a '
-                    'classifier: %s' % interaction_id)
+                    len(interaction.rules_dict), 1, msg=(
+                        'Expected trainable interaction to have more '
+                        'classifier: %s' % interaction_id))
 
     def test_linear_interactions(self):
         """Sanity-check for the number of linear interactions."""
@@ -479,9 +480,15 @@ class InteractionDemoExplorationUnitTests(test_utils.GenericTestBase):
     _DEMO_EXPLORATION_ID = '16'
 
     def test_interactions_demo_exploration(self):
-        exp_services.load_demo(self._DEMO_EXPLORATION_ID)
-        exploration = exp_services.get_exploration_by_id(
-            self._DEMO_EXPLORATION_ID)
+        def _mock_get_filepath_of_object_image(filename, unused_exp_id):
+            return {'filename': filename, 'height': 490, 'width': 120}
+
+        with self.swap(
+            html_cleaner, 'get_filepath_of_object_image',
+            _mock_get_filepath_of_object_image):
+            exp_services.load_demo(self._DEMO_EXPLORATION_ID)
+            exploration = exp_services.get_exploration_by_id(
+                self._DEMO_EXPLORATION_ID)
 
         all_interaction_ids = set(
             interaction_registry.Registry.get_all_interaction_ids())
@@ -492,6 +499,6 @@ class InteractionDemoExplorationUnitTests(test_utils.GenericTestBase):
 
         missing_interaction_ids = (
             all_interaction_ids - observed_interaction_ids)
-        self.assertEqual(len(missing_interaction_ids), 0, (
+        self.assertEqual(len(missing_interaction_ids), 0, msg=(
             'Missing interaction IDs in demo exploration: %s' %
             missing_interaction_ids))

@@ -31,14 +31,14 @@ oppia.directive('unresolvedAnswersOverview', [
       controller: [
         '$scope', '$rootScope', '$uibModal', 'EditorStateService',
         'ExplorationStatesService', 'StateRulesStatsService',
-        'ExplorationRightsService', 'stateInteractionIdService',
+        'ExplorationRightsService', 'StateInteractionIdService',
         'INTERACTION_SPECS', 'EditabilityService',
         'StateTopAnswersStatsService',
         'SUPPORTED_HTML_RENDERINGS_FOR_INTERACTION_IDS',
         function(
             $scope, $rootScope, $uibModal, EditorStateService,
             ExplorationStatesService, StateRulesStatsService,
-            ExplorationRightsService, stateInteractionIdService,
+            ExplorationRightsService, StateInteractionIdService,
             INTERACTION_SPECS, EditabilityService,
             StateTopAnswersStatsService,
             SUPPORTED_HTML_RENDERINGS_FOR_INTERACTION_IDS) {
@@ -72,7 +72,7 @@ oppia.directive('unresolvedAnswersOverview', [
           };
 
           $scope.getCurrentInteractionId = function() {
-            return stateInteractionIdService.savedMemento;
+            return StateInteractionIdService.savedMemento;
           };
 
           $scope.isCurrentInteractionLinear = function() {
@@ -102,8 +102,8 @@ oppia.directive('unresolvedAnswersOverview', [
               controller: [
                 '$scope', '$injector', '$uibModalInstance', '$http', '$filter',
                 'ExplorationHtmlFormatterService', 'TrainingModalService',
-                'stateInteractionIdService', 'stateCustomizationArgsService',
-                'ExplorationContextService', 'EditorStateService',
+                'StateInteractionIdService', 'StateCustomizationArgsService',
+                'ContextService', 'EditorStateService',
                 'ExplorationStatesService', 'TrainingDataService',
                 'AnswerClassificationService', 'EXPLICIT_CLASSIFICATION',
                 'UrlInterpolationService', 'TRAINING_DATA_CLASSIFICATION',
@@ -112,18 +112,18 @@ oppia.directive('unresolvedAnswersOverview', [
                 function(
                     $scope, $injector, $uibModalInstance, $http, $filter,
                     ExplorationHtmlFormatterService, TrainingModalService,
-                    stateInteractionIdService, stateCustomizationArgsService,
-                    ExplorationContextService, EditorStateService,
+                    StateInteractionIdService, StateCustomizationArgsService,
+                    ContextService, EditorStateService,
                     ExplorationStatesService, TrainingDataService,
                     AnswerClassificationService, EXPLICIT_CLASSIFICATION,
                     UrlInterpolationService, TRAINING_DATA_CLASSIFICATION,
                     AngularNameService, DEFAULT_OUTCOME_CLASSIFICATION,
                     AlertsService) {
                   var _explorationId = (
-                    ExplorationContextService.getExplorationId());
+                    ContextService.getExplorationId());
                   var _stateName = EditorStateService.getActiveStateName();
                   var _state = ExplorationStatesService.getState(_stateName);
-                  var interactionId = stateInteractionIdService.savedMemento;
+                  var interactionId = StateInteractionIdService.savedMemento;
 
                   var rulesServiceName = (
                     AngularNameService.getNameOfInteractionRulesService(
@@ -168,7 +168,7 @@ oppia.directive('unresolvedAnswersOverview', [
                       var answer = item.answer;
                       var classificationResult = (
                         acs.getMatchingClassificationResult(
-                          _explorationId, _stateName, _state, answer,
+                          _stateName, _state.interaction, answer,
                           rulesService));
                       var classificationType = (
                         classificationResult.classificationCategorization);
@@ -178,8 +178,8 @@ oppia.directive('unresolvedAnswersOverview', [
                           answer)) {
                         var answerTemplate = (
                           ExplorationHtmlFormatterService.getAnswerHtml(
-                            answer, stateInteractionIdService.savedMemento,
-                            stateCustomizationArgsService.savedMemento));
+                            answer, StateInteractionIdService.savedMemento,
+                            StateCustomizationArgsService.savedMemento));
                         var feedbackHtml = (
                           classificationResult.outcome.feedback.getHtml());
                         $scope.unresolvedAnswers.push({

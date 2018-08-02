@@ -19,10 +19,10 @@
 // TODO(czx): Uniquify the labels of image regions
 oppia.directive('imageWithRegionsEditor', [
   '$sce', 'UrlInterpolationService', 'AlertsService', '$document',
-  'ExplorationContextService', 'AssetsBackendApiService',
+  'ContextService', 'AssetsBackendApiService',
   'OBJECT_EDITOR_URL_PREFIX',
   function($sce, UrlInterpolationService, AlertsService, $document,
-      ExplorationContextService, AssetsBackendApiService,
+      ContextService, AssetsBackendApiService,
       OBJECT_EDITOR_URL_PREFIX) {
     return {
       restrict: 'E',
@@ -159,7 +159,7 @@ oppia.directive('imageWithRegionsEditor', [
 
           $scope.getPreviewUrl = function(imageUrl) {
             return AssetsBackendApiService.getImageUrlForPreview(
-              ExplorationContextService.getExplorationId(),
+              ContextService.getExplorationId(),
               encodeURIComponent(imageUrl));
           };
 
@@ -167,15 +167,8 @@ oppia.directive('imageWithRegionsEditor', [
           // width and height, especially for large images.
           $scope.$watch('value.imagePath', function(newVal) {
             if (newVal !== '') {
-              // Loads the image in hanging <img> tag so as to get the
-              // width and height.
-              $('<img/>').attr('src', $scope.getPreviewUrl(newVal)).on(
-                'load', function() {
-                  $scope.originalImageWidth = this.width;
-                  $scope.originalImageHeight = this.height;
-                  $scope.$apply();
-                }
-              );
+              $scope.originalImageWidth = newVal.width;
+              $scope.originalImageHeight = newVal.height;
             }
           });
 
